@@ -2636,7 +2636,7 @@ async function buscaBling(q){
   const my=++BL.seq,box=$('bres');if(!box)return;
   const loc=acharLocal(q);
   if(loc&&loc.length){BL.lista=loc;box.innerHTML='<div class="bres">'+loc.map((c,i)=>'<button type="button" data-act="bling-pick" data-v="'+i+'">'+esc(c.nome||'')+(c.celular||c.telefone?' · '+esc(c.celular||c.telefone):' · sem telefone')+'</button>').join('')+'</div>';return}
-  if(!BL.mcp){box.innerHTML=loc?'<p class="bprev">Não achei nos clientes guardados. Se for cliente nova, marque "Cliente nova".</p>':'<p class="bprev">Busca no Bling indisponível nesta tela.</p>';return}
+  if(!BL.mcp){box.innerHTML=loc?'<p class="bprev">Não achei nos clientes guardados. Se for cliente nova, marque "Cliente nova".</p>':'<p class="bprev">Não achei nos clientes guardados. Se for cliente nova, marque "Cliente nova".</p>';return}
   box.innerHTML='<p class="bprev">Buscando no Bling…</p>';
   try{
     const r=await BL.mcp.callTool(BLING,'listContacts',{pesquisa:q,limite:6,fields:['id','nome','telefone','celular']});
