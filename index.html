@@ -354,7 +354,7 @@ const db={collection(col){return{
 
 /* ---------- fotos e arquivos ---------- */
 const assets={async upload(blob,opt){
-  const id=hex32();
+  const id=(opt&&opt.id)||hex32();
   const priv=!!(opt&&opt.privado);
   const {error}=await sb.storage.from(priv?'privado':'pecas').upload(id,blob,{contentType:(opt&&opt.type)||blob.type||'application/octet-stream',upsert:true,cacheControl:'31536000'});
   if(error)throw error;
@@ -4167,13 +4167,13 @@ async function bkRestaurar(){
     let seg;
     try{const {blob}=await bkCriar();seg=blob;await dl.save({filename:'comadres-antes-da-restauracao-'+bkHoje()+'.zip',data:blob})}
     catch(e){bkMsg('A cópia de segurança do estado atual não foi salva. Restauração cancelada: nada foi alterado.');BK.rodando=false;if(go)go.disabled=false;if(fi)fi.disabled=false;return}
-    const mapa={},faltam=[];const ids=Object.keys(j.fotos);let n=0;
+    const mapa={},faltam=[];const PRIVS=new Set(Object.values(cols.comprovantes||{}).map(x=>x&&x.asset).filter(Boolean));const ids=Object.keys(j.fotos);let n=0;
     for(const id of ids){
       n++;bkMsg('Conferindo as fotos… '+n+' de '+ids.length);
       if(await bkExiste(id))continue;
       const info=j.fotos[id],zf=info&&BK.zip.file(info.arquivo);
       if(!zf||!CAP.assets){faltam.push(id);continue}
-      try{const raw=await zf.async('arraybuffer');const up=await CAP.assets.upload(new Blob([raw],{type:info.tipo||'image/jpeg'}));if(up&&up.id)mapa[id]=up.id;else faltam.push(id)}catch(e){faltam.push(id)}
+      try{const raw=await zf.async('arraybuffer');const up=await CAP.assets.upload(new Blob([raw],{type:info.tipo||'image/jpeg'}),{id:id,privado:PRIVS.has(id),type:info.tipo||'image/jpeg'});if(up&&up.id)mapa[id]=up.id;else faltam.push(id)}catch(e){faltam.push(id)}
     }
     if(Object.keys(mapa).length)for(const c of BK_COLS){if(c==='bling')continue;for(const id in cols[c])bkWalk(cols[c][id],x=>mapa[x]||x)}
     const escrever=[],apagar=[];
