@@ -3799,7 +3799,7 @@ async function savePeca(id,next){
 function csvCell(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"'}
 
 /* ---------- backup completo e restauração ---------- */
-const BK_COLS=['pecas','consignantes','pedidos','tarefas','propostas','vendas','clientes','catalogos','bling','comprovantes','vitrine'];
+const BK_COLS=['pecas','consignantes','pedidos','tarefas','propostas','vendas','clientes','catalogos','bling','comprovantes','vitrine','config'];
 const HEX32=/^[0-9a-f]{32}$/;
 let BK=null;
 function bkWalk(o,fn){
@@ -4132,19 +4132,19 @@ async function bkAbrirArquivo(file){
     const f=zip.file('dados.json');if(!f)throw new Error('sem dados');
     const j=JSON.parse(await f.async('string'));
     if(!j||j.formato!=='comadres-backup'||!j.colecoes||typeof j.colecoes!=='object')throw new Error('formato');
-    if(!j.colecoes.clientes)j.colecoes.clientes=null;if(!j.colecoes.comprovantes)j.colecoes.comprovantes=null;if(!j.colecoes.vitrine)j.colecoes.vitrine=null;
+    if(!j.colecoes.config)j.colecoes.config=null;if(!j.colecoes.clientes)j.colecoes.clientes=null;if(!j.colecoes.comprovantes)j.colecoes.comprovantes=null;if(!j.colecoes.vitrine)j.colecoes.vitrine=null;
     for(const c of BK_COLS){
-      if((c==='clientes'||c==='comprovantes'||c==='vitrine')&&!j.colecoes[c])continue;
+      if((c==='clientes'||c==='comprovantes'||c==='vitrine'||c==='config')&&!j.colecoes[c])continue;
       const m=j.colecoes[c];if(!m||typeof m!=='object'||Array.isArray(m))throw new Error('faltando '+c);
       for(const id in m){if(!/^[A-Za-z0-9_\-.~:@+]{1,200}$/.test(id)||!m[id]||typeof m[id]!=='object'||Array.isArray(m[id]))throw new Error('registro inválido');}
     }
     if(!j.fotos||typeof j.fotos!=='object')j.fotos={};
     bkMsg('Comparando com os dados atuais…');
     const atual=await bkLerBanco();
-    if(!j.colecoes.clientes)j.colecoes.clientes={...atual.clientes};if(!j.colecoes.comprovantes)j.colecoes.comprovantes={...atual.comprovantes};if(!j.colecoes.vitrine)j.colecoes.vitrine={...atual.vitrine};
+    if(!j.colecoes.config)j.colecoes.config={...atual.config};if(!j.colecoes.clientes)j.colecoes.clientes={...atual.clientes};if(!j.colecoes.comprovantes)j.colecoes.comprovantes={...atual.comprovantes};if(!j.colecoes.vitrine)j.colecoes.vitrine={...atual.vitrine};
     const linhas=BK_COLS.map(c=>{const bk=Object.keys(j.colecoes[c]),hoje=Object.keys(atual[c]);const apagar=hoje.filter(id=>!(id in j.colecoes[c])).length;return {c,bk:bk.length,hoje:hoje.length,apagar}});
     BK={zip,j,atual,rodando:false};
-    const nome={pecas:'Peças',consignantes:'Consignantes',pedidos:'Pedidos',tarefas:'Agenda',propostas:'Propostas',vendas:'Vendas',clientes:'Clientes',bling:'Dados do Bling',comprovantes:'Comprovantes',vitrine:'Marcas da vitrine'};
+    const nome={pecas:'Peças',consignantes:'Consignantes',pedidos:'Pedidos',tarefas:'Agenda',propostas:'Propostas',vendas:'Vendas',clientes:'Clientes',bling:'Dados do Bling',comprovantes:'Comprovantes',vitrine:'Marcas da vitrine',config:'Chaves Pix e ajustes'};
     bkMsg('');
     bkArea('<p class="hint">Backup de '+esc(new Date(j.criadoEm).toLocaleString('pt-BR'))+'. Restaurar vai <strong>substituir os dados atuais</strong> por estes:</p>'+
       '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr><th style="text-align:left">&nbsp;</th><th style="text-align:right">No backup</th><th style="text-align:right">Agora</th><th style="text-align:right">Serão apagados</th></tr></thead><tbody>'+
